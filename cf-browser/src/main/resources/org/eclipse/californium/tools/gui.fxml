@@ -229,7 +229,7 @@
 											prefHeight="180.0" prefWidth="200.0">
 											<children>
 												<TextArea fx:id="requestArea" prefHeight="80.0"
-													prefWidth="200.0" promptText="Request info..."
+													prefWidth="200.0" promptText="Request body text payload..."
 													AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
 													AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
 											</children>
@@ -241,6 +241,9 @@
 								<HBox alignment="CENTER" minWidth="100.0" spacing="5.0"
 									BorderPane.alignment="CENTER">
 									<children>
+										<Button mnemonicParsing="false" onAction="#selectFile"
+											fx:id="selectFileButton" prefWidth="80.0" text="Select file..."
+											HBox.hgrow="ALWAYS" />
 										<Button mnemonicParsing="false" onAction="#getRequest"
 											fx:id="getButton" prefWidth="80.0" text="GET"
 											HBox.hgrow="ALWAYS" />
