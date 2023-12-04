@@ -18,6 +18,8 @@
 package org.eclipse.californium.tools;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -103,6 +105,7 @@ import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.text.Font;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -179,6 +182,9 @@ public class GUIController implements NotificationListener {
 	@FXML
 	private RadioMenuItem handshakeTypeMenuItemNo;
 
+	private FileChooser fileChooser;
+	private File selectedFile;
+
 	private String coapHost;
 	private int accept = MediaTypeRegistry.UNDEFINED;
 	private int contentType = MediaTypeRegistry.TEXT_PLAIN;
@@ -240,6 +246,7 @@ public class GUIController implements NotificationListener {
 
 	public void initialize(Stage stage, GuiClientConfig config, int maxLogLines) {
 		this.stage = stage;
+		this.fileChooser = new FileChooser();
 		this.clientConfig = config;
 		this.maxLogAreaLines = maxLogLines;
 		boolean init = false;
@@ -259,6 +266,10 @@ public class GUIController implements NotificationListener {
 		}
 		Font monospaceFont = Font.font("monospace");
 		requestArea.setFont(monospaceFont);
+		requestArea.textProperty().addListener((observable, oldValue, newValue) -> {
+			selectedFile = null;
+			requestArea.setPromptText("Request body text payload...");
+		});
 		responseArea.setFont(monospaceFont);
 		logArea.setFont(monospaceFont);
 		connectionArea.setFont(monospaceFont);
@@ -472,6 +483,18 @@ public class GUIController implements NotificationListener {
 
 	@FXML
 	private void uriSelected() {
+	}
+
+	@FXML
+	private void selectFile() {
+		requestArea.clear();
+		fileChooser.setTitle("Select binary file");
+		selectedFile = fileChooser.showOpenDialog(stage);
+		if (selectedFile != null) {
+			requestArea.setPromptText("Request body binary payload file: " + selectedFile.getName());
+		} else {
+			requestArea.setPromptText("Request body text payload...");
+		}
 	}
 
 	@FXML
@@ -840,7 +863,7 @@ public class GUIController implements NotificationListener {
 	 * Perform the given request by adding in the resource uri from the uri combo
 	 * box selection, payload from the request text area, and message observer to a
 	 * ResponsePrinter.
-	 * 
+	 *
 	 * @param request - the coap request type
 	 */
 	private void performRequest(final Request request) {
@@ -856,7 +879,11 @@ public class GUIController implements NotificationListener {
 			if (request.isIntendedPayload()) {
 				applyRequestContent();
 				String text = requestArea.getText();
-				if (!text.isEmpty()) {
+				if (selectedFile != null && selectedFile.isFile()) {
+					try (FileInputStream stream = new FileInputStream(selectedFile)) {
+						request.setPayload(stream.readAllBytes());
+					}
+				} else if (!text.isEmpty()) {
 					request.setPayload(text);
 				}
 				if (contentType != MediaTypeRegistry.UNDEFINED) {
